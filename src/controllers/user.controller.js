@@ -1,6 +1,7 @@
 const createError = require("http-errors");
 const User = require("../models/user.model");
 const { default: mongoose } = require("mongoose");
+const getUserById = require("../services/getUserById");
 
 // get all user
 const getUsers = async (req, res, next) => {
@@ -48,11 +49,7 @@ const getUsers = async (req, res, next) => {
 const getUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const options = { password: 0 };
-    const user = await User.findById(id, options);
-
-    if (!user) throw createError(404, "User doesn't exist");
-
+    const user = await getUserById(id);
     res.status(200).json({
       message: "Users ware returned",
       user,
