@@ -1,7 +1,10 @@
 const createError = require("http-errors");
 const User = require("../models/user.model");
 const { default: mongoose } = require("mongoose");
-const getUserById = require("../services/getUserById");
+const getWithId = require("../services/getWithId");
+const fs = require("fs").promises;
+const { default_user_image_path } = require("../secret");
+const deleteImage = require("../helper/deleteImage");
 
 // get all user
 const getUsers = async (req, res, next) => {
@@ -49,10 +52,38 @@ const getUsers = async (req, res, next) => {
 const getUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = await getUserById(id);
+    const options = { password: 0 };
+    const user = await getWithId(User, id, options);
     res.status(200).json({
       message: "Users ware returned",
       user,
+    });
+  } catch (error) {
+    if (error instanceof mongoose.Error) {
+      next(createError(404, "Invalid user Id"));
+      return;
+    }
+    next(error);
+  }
+};
+// delete user
+const deleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await getWithId(User, id);
+
+    const userImagePath = user.image;
+
+    deleteImage(userImagePath);
+
+    // delete user
+    await User.findByIdAndDelete({
+      _id: id,
+      isAdmin: false,
+    });
+
+    res.status(200).json({
+      message: "User delete successfull",
     });
   } catch (error) {
     if (error instanceof mongoose.Error) {
@@ -66,4 +97,5 @@ const getUser = async (req, res, next) => {
 module.exports = {
   getUsers,
   getUser,
+  deleteUser,
 };
