@@ -5,6 +5,7 @@ const getWithId = require("../services/getWithId");
 const fs = require("fs").promises;
 const { default_user_image_path } = require("../secret");
 const deleteImage = require("../helper/deleteImage");
+const { successResponse } = require("./response.controller.js");
 
 // get all user
 const getUsers = async (req, res, next) => {
@@ -33,16 +34,29 @@ const getUsers = async (req, res, next) => {
 
     if (!users) throw createError(404, "no users found");
 
-    res.status(200).json({
-      message: "Users ware returned",
-      users,
-      pagination: {
-        totalPages: Math.ceil(count / limit),
-        currentPage: page,
-        prevPage: page - 1 > 0 ? page - 1 : null,
-        nextpage: page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
+    return successResponse(res, {
+      statusCode: 200,
+      message: "User ware returned",
+      payload: {
+        users,
+        pagination: {
+          totalPages: Math.ceil(count / limit),
+          currentPage: page,
+          prevPage: page - 1 > 0 ? page - 1 : null,
+          nextpage: page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
+        },
       },
     });
+    // res.status(200).json({
+    //   message: "Users ware returned",
+    //   users,
+    //   pagination: {
+    //     totalPages: Math.ceil(count / limit),
+    //     currentPage: page,
+    //     prevPage: page - 1 > 0 ? page - 1 : null,
+    //     nextpage: page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
+    //   },
+    // });
   } catch (error) {
     next(error);
   }
@@ -94,8 +108,25 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+// register user
+const register = async (req, res, next) => {
+  try {
+    const { name, email, password, phone, address } = req.body;
+    res.status(200).json({
+      message: "User delete successfull",
+    });
+  } catch (error) {
+    if (error instanceof mongoose.Error) {
+      next(createError(404, "Invalid user Id"));
+      return;
+    }
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getUser,
   deleteUser,
+  register,
 };
